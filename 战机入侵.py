@@ -4,6 +4,7 @@ import pygame
 
 from 游戏数值设置 import Settings
 from ship import Ship
+from bullet import Bullet
 
 
 #管理游戏资源和行为的类
@@ -21,7 +22,7 @@ class zhanji_invasion:
         pygame.display.set_caption("战机入侵")
         
         self.ship=Ship(self)
-        
+        self.bullets=pygame.sprite.Group()
     
     
     
@@ -32,6 +33,11 @@ class zhanji_invasion:
         while True:
             self._check_event()
             self.ship.update()
+            self.bullets.update()
+            
+            #删除消失的子弹
+            self._update_bullets()
+            
             self._update_screen()        
             
             """帧率设置"""
@@ -66,7 +72,10 @@ class zhanji_invasion:
             self.ship.moving_left=True 
         #快速退出游戏
         elif event.key==pygame.K_q:
-            sys.exit()            
+            sys.exit()     
+        #发射子弹
+        elif event.key==pygame.K_SPACE:
+            self._fire_bullet()       
     
     
     
@@ -81,11 +90,32 @@ class zhanji_invasion:
                 self.ship.moving_left=False  
     
     
+    def _fire_bullet(self):
+        #创建一颗子弹并加入编组bullets
+        if len(self.bullets)<self.settings.bullets_allowed:
+            new_bullet=Bullet(self)
+            self.bullets.add(new_bullet)
+    
+    
+    
+    
+    def _update_bullets(self):
+        #更新子弹位置并删除
+        self.bullets.update()
+        
+        #删除消失子弹
+        for bullet in self.bullets.copy():
+            if bullet.rect.bottom<=0:
+                self.bullets.remove(bullet)
+    
+    
     
     
      #更新屏幕程序           
     def _update_screen(self):
         self.screen.fill(self.settings.bg_color)
+        for bullet in self.bullets.sprites():
+            bullet.draw_bullet()
         self.ship.blitme()    
         pygame.display.flip()
     
